@@ -1,5 +1,9 @@
 package trabalho1;
 
+// comentario de teste
+
+
+
 import java.util.ArrayList;
 
 public class Aestrela {
