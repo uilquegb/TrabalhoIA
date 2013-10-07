@@ -3,273 +3,185 @@ package trabalho1;
 import java.util.ArrayList;
 
 public class Aestrela {
-
-    private posicao[][] mapa;
-    private posicao origem;
-    private posicao destino;
-    private ArrayList<posicao> listaAberta;
-    private ArrayList<posicao> listaFechada;
-    private ArrayList<posicao> listaCaminho;
-    private ArrayList<posicao> listaParedes;
-
-    public Aestrela(posicao mapa[][], posicao origem, posicao destino) {
-        this.mapa = mapa;
+    private Entidade origem;
+    private ArrayList<Entidade> destinos;
+    private ArrayList<Entidade> listaAberta;
+    private ArrayList<Entidade> listaFechada;
+    private ArrayList<Entidade> listaCaminho;
+    private int heuristicaParede = 987654;
+    
+    public Aestrela(Entidade origem, Entidade[] destinos) {
         this.origem = origem;
-        this.destino = destino;
-        listaAberta = new ArrayList<posicao>();
-        listaFechada = new ArrayList<posicao>();
-        listaCaminho = new ArrayList<posicao>();
-        listaParedes = new ArrayList<posicao>();
+        this.resetar();
+        
+        for(int i = 0;i < destinos.length;i++)
+            this.addDestino(destinos[i]);
+    }
+
+    public Aestrela(Entidade origem, Entidade destino) {
+        this(origem, new Entidade[]{destino});
+    }
+    
+    private void resetar(){
+        if(this.destinos == null)
+            this.destinos = new ArrayList<>();
+        if(this.listaAberta == null)
+            this.listaAberta = new ArrayList<Entidade>();
+        if(this.listaFechada == null)
+            this.listaFechada = new ArrayList<Entidade>();
+        if(this.listaCaminho == null)
+            this.listaCaminho = new ArrayList<Entidade>();
+        
+        this.destinos.clear();
+        this.listaAberta.clear();
+        this.listaFechada.clear();
+        this.listaCaminho.clear();
+        
+        for(int i = 0;i < Global.getListaEntidades().size();i++){
+            Entidade item = Global.getListaEntidades().get(i);
+            item.setCustoAcumulado(0);
+        }
     }
 
     public boolean iniciarPesquisa() {
         if (getOrigem() == getDestino()) {
             return true;
         }
-
-        listaAberta.add(getOrigem());
+        
+        this.listaAberta.clear();
+        this.listaAberta.add(getOrigem());
+        this.listaFechada.clear();
 
         if (pesquisar()) {
-            return salvarCaminho();
+            boolean salvou = salvarCaminho();
+            
+            if(this.destinos.size() > 1){
+                this.setOrigem(this.destinos.remove(0));
+                return salvou && this.iniciarPesquisa();
+            }
+            
+            return salvou;
         }
         return false;
     }
-
+    
     private boolean pesquisar() {
-        //procura o vizinho com menor custo na lista aberta
-        posicao atual = listaAberta.get(0);
+        while(!this.listaAberta.isEmpty()){
+            //procura o vizinho com menor custo na lista aberta
+            Entidade atual = this.listaAberta.get(0);
 
-        for (int i = 1; i < listaAberta.size(); i++) {
-            if (atual.getCustoF() > listaAberta.get(i).getCustoF()) {
-                atual = listaAberta.get(i);
-            }
-        }
-
-        // remove a posicao atual da lista aberta e insere na lista fechada
-        listaFechada.add(atual);
-        listaAberta.remove(atual);
-
-        // se o atual for o destino, retorna verdadeiro
-        if (atual == destino) {
-            return true;
-        }
-
-        int x;
-        int y;
-
-        x = atual.getX();
-        y = atual.getY();
-
-        int dir = x + 1;
-        int esq = x - 1;
-        int cima = y - 1;
-        int baixo = y + 1;
-
-        // direita
-        if (dir < mapa[0].length) {
-            posicao direita = mapa[dir][y];
-            if (!listaFechada.contains(direita) && !listaParedes.contains(direita)) {
-                int custoG = atual.getCustoG() + 1;
-                int custoH = getDM(destino.getX(), destino.getY(), direita.getX(), direita.getY());
-
-                if (!listaAberta.contains(direita)) {
-                    direita.setPai(atual);
-                    listaAberta.add(direita);
-                    direita.setCustoG(custoG);
-                    direita.setCustoH(custoH);
-                } else {
-                    if (direita.getCustoH() > custoH) {
-                        direita.setPai(atual);
-                        direita.setCustoG(custoG);
-                        direita.setCustoH(custoH);
-                    }
+            for (int i = 1; i < this.listaAberta.size(); i++) {
+                if (atual.getCustoAcumuladoEHeuristica() > this.listaAberta.get(i).getCustoAcumuladoEHeuristica()) {
+                    atual = this.listaAberta.get(i);
                 }
             }
-        }
 
-        // esquerda
-        if (esq >= 0) {
-            posicao esquerda = getGrade()[esq][y];
-            if (!listaFechada.contains(esquerda) && !listaParedes.contains(esquerda)) {
-                int custoG = atual.getCustoG() + 1;
-                int custoH = getDM(destino.getX(), destino.getY(), esquerda.getX(), esquerda.getY());
+            // remove a posicao atual da lista aberta e insere na lista fechada
+            this.listaFechada.add(atual);
+            this.listaAberta.remove(atual);
 
-                if (!listaAberta.contains(esquerda)) {
-                    esquerda.setPai(atual);
-                    listaAberta.add(esquerda);
-                    esquerda.setCustoG(custoG);
-                    esquerda.setCustoH(custoH);
-                } else {
-                    if (esquerda.getCustoH() > custoH) {
-                        esquerda.setPai(atual);
-                        esquerda.setCustoG(custoG);
-                        esquerda.setCustoH(custoH);
-                    }
-                }
+            // se o atual for o destino, retorna verdadeiro
+            if (atual == this.getDestino()) {
+                return true;
             }
-        }
 
-        //cima
-        if (cima >= 0) {
-            posicao acima = getGrade()[x][cima];
-            if (!listaFechada.contains(acima) && !listaParedes.contains(acima)) {
-                int custoG = atual.getCustoG() + 1;
-                int custoH = getDM(destino.getX(), destino.getY(), acima.getX(), acima.getY());
+            ArrayList<Entidade> vizinhosDoAtual = new ArrayList<Entidade>();
+            vizinhosDoAtual.add(atual.getCima());
+            vizinhosDoAtual.add(atual.getDireita());
+            vizinhosDoAtual.add(atual.getBaixo());
+            vizinhosDoAtual.add(atual.getEsquerda());
 
-                if (!listaAberta.contains(acima)) {
-                    acima.setPai(atual);
-                    listaAberta.add(acima);
-                    acima.setCustoG(custoG);
-                    acima.setCustoH(custoH);
-                } else {
-                    if (acima.getCustoH() > custoH) {
-                        acima.setPai(atual);
-                        acima.setCustoG(custoG);
-                        acima.setCustoH(custoH);
-                    }
-                }
-            }
-        }
+            for(int i = 0;i < vizinhosDoAtual.size();i++){
+                Entidade vizinho = vizinhosDoAtual.get(i);
+                if(this.ehEntidadeValida(vizinho)){
+                    boolean naoTaNaListaAberta = !this.listaAberta.contains(vizinho);
+                    int heuristica = getDM(this.getDestino().getX(), this.getDestino().getY(), vizinho.getX(), vizinho.getY());
 
-        //baixo
-        if (baixo < mapa.length) {
-            posicao abaixo = mapa[x][baixo];
-            if (!listaFechada.contains(abaixo) && !listaParedes.contains(abaixo)) {
-                int custoG = atual.getCustoG() + 1;
-                int custoH = getDM(destino.getX(), destino.getY(), abaixo.getX(), abaixo.getY());
-
-                if (!listaAberta.contains(abaixo)) {
-                    abaixo.setPai(atual);
-                    listaAberta.add(abaixo);
-                    abaixo.setCustoG(custoG);
-                    abaixo.setCustoH(custoH);
-                } else {
-                    if (abaixo.getCustoH() > custoH) {
-                        abaixo.setPai(atual);
-                        abaixo.setCustoG(custoG);
-                        abaixo.setCustoH(custoH);
+                    if (naoTaNaListaAberta || vizinho.getHeuristita() > heuristica) {
+                        if(naoTaNaListaAberta)
+                            this.listaAberta.add(vizinho);
+                        int custoAcumulado = atual.getCustoAcumulado();
+                        vizinho.setAnterior(atual);
+                        vizinho.setCustoAcumulado(custoAcumulado);
+                        vizinho.setHeuristica(heuristica);
                     }
                 }
             }
         }
 
         // se a lista aberta ficou vazia, não existem caminhos
-        if (listaAberta.isEmpty()) {
-            return false;
-        }
-
+        return false;
         //pesquisa recursivamente, até obter um retorno
-        return pesquisar();
+        //return pesquisar();
     }
 
+    private boolean ehEntidadeValida(Entidade entidade){
+        return entidade != null && !this.listaFechada.contains(entidade) && entidade.getTipo() != 'P';
+    }
+    
     //salva o caminho
     private boolean salvarCaminho() {
-        posicao atual = getDestino();
+        Entidade atual = getDestino();
 
         if (atual == null) {
             return false;
         }
-
+        
+        Entidade aux = null;
+        int index = this.listaCaminho.size();
+        
         while (atual != null) {
-            listaCaminho.add(atual);
-            atual = atual.getPai();
+            this.listaCaminho.add(index, atual);
+            aux = atual.getAnterior();
+            atual.setAnterior(null);
+            atual = aux;
         }
         return true;
 
     }
-
-    public posicao[][] getGrade() {
-        return mapa;
+    
+    public void setOrigemDestino(Entidade origem, Entidade[] destinos){
+        this.resetar();
+        this.setOrigem(origem);
+        
+        for(int i = 0;i < destinos.length;i++)
+            this.addDestino(destinos[i]);
+    }
+    
+    public void setOrigemDestino(Entidade origem, Entidade destino){
+        if(origem != null && destino != null && origem != destino){
+            this.setOrigemDestino(origem, new Entidade[]{destino});
+        }
+    }
+    
+    public Entidade getOrigem() {
+        return this.origem;
     }
 
-    public void setGrade(posicao[][] grade) {
-        this.mapa = grade;
-    }
-
-    public posicao getOrigem() {
-        return origem;
-    }
-
-    public void setOrigem(posicao origem) {
+    public void setOrigem(Entidade origem) {
         this.origem = origem;
     }
 
-    public posicao getDestino() {
-        return destino;
+    public Entidade getDestino() {
+        if(this.destinos.size() > 0)
+            return this.destinos.get(0);
+        return null;
     }
 
-    public void setDestino(posicao destino) {
-        this.destino = destino;
+    public void setDestino(Entidade destino) {
+        this.destinos.clear();
+        this.addDestino(destino);
+    }
+    public void addDestino(Entidade destino){
+        this.destinos.add(destino);
     }
 
-    public ArrayList<posicao> getListaCaminho() {
-        return listaCaminho;
-    }
-
-    public ArrayList<posicao> getListaBloqueios() {
-        return listaParedes;
+    public ArrayList<Entidade> getListaCaminho() {
+        return this.listaCaminho;
     }
 
     private int getDM(int p1X, int p1Y, int p2X, int p2Y) {
         int DM = Math.abs(p2X - p1X) + Math.abs(p2Y - p1Y);
         return DM;
-    }
-
-    private static class posicao {
-
-        private int custoG = 0;
-        private int custoH = 9999;
-        private int x = 0;
-        private int y = 0;
-        private posicao pai = null;
-
-        public posicao(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        public int getCustoF() {
-            return custoG + custoH;
-        }
-
-        public int getCustoG() {
-            return custoG;
-        }
-
-        public void setCustoG(int custoG) {
-            this.custoG = custoG;
-        }
-
-        public int getCustoH() {
-            return custoH;
-        }
-
-        public void setCustoH(int custoH) {
-            this.custoH = custoH;
-        }
-
-        public int getX() {
-            return x;
-        }
-
-        public void setPosicaoX(int x) {
-            this.x = x;
-        }
-
-        public int getY() {
-            return y;
-        }
-
-        public void setPosicaoY(int y) {
-            this.y = y;
-        }
-
-        public posicao getPai() {
-            return pai;
-        }
-
-        public void setPai(posicao pai) {
-            this.pai = pai;
-        }
     }
 }
