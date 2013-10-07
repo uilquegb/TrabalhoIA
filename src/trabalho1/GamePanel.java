@@ -90,11 +90,41 @@ public class GamePanel extends JPanel {
         aEstrela.setOrigemDestino(robo, caminhos[escolhido]);
         aEstrela.iniciarPesquisa();
         caminho = aEstrela.getListaCaminho();
+        imprimeCaminho(caminho);
         Timer t = new Timer(200, this.action);
         t.start();
     }
     
-    
+    public void imprimeCaminho(ArrayList<Entidade> caminho){
+        int i, quantidade = 0;
+        char direcao = 'N', direcaoAtual = 'M';
+        Entidade atual = null, anterior;
+        System.out.print("Caminho = {");
+        
+        for(i = 0;i < caminho.size();i++){
+            atual = caminho.get(i);
+            
+            if(i > 0){
+                anterior = caminho.get(i - 1);
+                direcaoAtual = direcao;
+                direcao = (anterior == atual.getCima() ? 'B' :
+                            (anterior == atual.getBaixo() ? 'C' :
+                                (anterior == atual.getDireita() ? 'E' : 'D')
+                            )
+                          );
+                if(direcao != direcaoAtual){
+                    if(direcaoAtual != 'N' && direcaoAtual != 'M')
+                        System.out.print(String.format("%c (%d), ", direcaoAtual, quantidade));
+                    quantidade = 1;
+                }
+                else
+                    quantidade++;
+            }
+        }
+        
+        if(direcao != 'N' && direcao != 'M')
+            System.out.print(String.format("%c (%d)}, Custo = %d ", direcao, quantidade, atual != null ? atual.getCustoAcumulado() : 0));
+    }
 
     @Override
     public void paint(Graphics g) {
