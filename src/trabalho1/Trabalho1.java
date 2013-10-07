@@ -1,4 +1,5 @@
-
+// Integrantes: Clineu Neto, Ricardo Claro e Uilque Messias
+// Jogos Digitais 3º Semestre
 package trabalho1;
 
 import java.awt.event.ActionEvent;

@@ -91,7 +91,7 @@ public class GamePanel extends JPanel {
         aEstrela.iniciarPesquisa();
         caminho = aEstrela.getListaCaminho();
         imprimeCaminho(caminho);
-        Timer t = new Timer(200, this.action);
+        Timer t = new Timer(100, this.action);
         t.start();
     }
     
