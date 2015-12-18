@@ -24,7 +24,7 @@ public class GamePanel extends JPanel {
                 GamePanel.this.robo.setY(entidade.getY());
                 
                 if(t == '1' || t == '2' || t == '3' || t == 'S')
-                    entidade.setTipo('L');
+                    entidade.setTipo('_');
                     
                 //entidade.setTipo('1');
                 GamePanel.this.paint(GamePanel.this.getGraphics());
@@ -134,9 +134,9 @@ public class GamePanel extends JPanel {
         g.setColor(Color.GREEN);
         g.fillRect(0, 0, getWidth(), getHeight());
         Image robo = Global.getImagemByTipoEntidade('R'),
-              parede = Global.getImagemByTipoEntidade('P'),
-              livre = Global.getImagemByTipoEntidade('L'),
-              agua = Global.getImagemByTipoEntidade('A'),
+              parede = Global.getImagemByTipoEntidade('#'),
+              livre = Global.getImagemByTipoEntidade('_'),
+              agua = Global.getImagemByTipoEntidade('~'),
               saidaImg = Global.getImagemByTipoEntidade('S'),
               item1 = Global.getImagemByTipoEntidade('1'),
               item2 = Global.getImagemByTipoEntidade('2'),
@@ -144,7 +144,7 @@ public class GamePanel extends JPanel {
         // desenha o cenario
         for (Entidade e : Global.getListaEntidades()) {
             switch (e.getTipo()) {
-                case 'P': // parede
+                case '#': // parede
                     if(parede != null)
                         g.drawImage(parede, e.getX()*LARGURA, e.getY()*ALTURA, null);
                     else{
@@ -154,7 +154,7 @@ public class GamePanel extends JPanel {
                         g.fillRect(e.getX()*LARGURA + 1, e.getY()*ALTURA + 1, LARGURA - 2, ALTURA - 2);
                     }
                     break;
-                case 'L': //area livre
+                case '_': //area livre
                     if(livre != null)
                         g.drawImage(livre, e.getX()*LARGURA, e.getY()*ALTURA, null);
                     else{
@@ -162,7 +162,7 @@ public class GamePanel extends JPanel {
                         g.fillRect(e.getX()*LARGURA, e.getY()*ALTURA, LARGURA, ALTURA);
                     }
                     break;
-                case 'A': // agua
+                case '~': // agua
                     if(agua != null)
                         g.drawImage(agua, e.getX()*LARGURA, e.getY()*ALTURA, null);
                     else{

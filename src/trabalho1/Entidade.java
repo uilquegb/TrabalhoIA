@@ -5,7 +5,7 @@ import java.awt.Image;
 public class Entidade {
 
     private Image imagem = null;
-    // A = Águar, P = Parede, L = Área Livre
+    // ~ = Águar, # = Parede, _ = Área Livre
     // 1 = Item 1, 2 = item 2, 3 = item, S = Saída
     private char tipo = 0;
     private int x;
@@ -30,13 +30,13 @@ public class Entidade {
         this.y = y;
         
         switch(tipo){
-            case 'A':
+            case '~':
                 this.custoEntidade = 5;
                 break;
-            case 'P':
+            case '#':
                 this.custoEntidade = 987654;
                 break;
-            case 'L':
+            case '_':
             case '1':
             case '2':
             case '3':

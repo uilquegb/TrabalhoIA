@@ -31,7 +31,7 @@ public abstract class Arquivo {
                 String line = scan.nextLine().trim();
                 
                 //trata linhas vazias
-                if (line.isEmpty() || line.trim().charAt(0) == '#')
+                if (line.isEmpty() || line.trim().charAt(0) == '*')
                     continue;
                 
                 if (line.equals("ARQUIVOS")){
@@ -52,7 +52,7 @@ public abstract class Arquivo {
                     
                     
                     if(e.getTipo() == 'e')
-                        Global.getListaEntidades().add(new Entidade('L', i, y));
+                        Global.getListaEntidades().add(new Entidade('_', i, y));
                     Global.getListaEntidades().add(e);
                 }
                 
